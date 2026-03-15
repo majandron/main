@@ -214,12 +214,12 @@ const MILESTONE_PHRASES = {
 };
 
 const VIRUS_TYPES = [
-  { name:'FLU',     color:'#ff4444', size:20, spikes:8,  pts:10, glow:'#ff000088' },
-  { name:'COVID',   color:'#ff8800', size:24, spikes:12, pts:20, glow:'#ff880088' },
-  { name:'MEASLES', color:'#ff44ff', size:17, spikes:6,  pts:15, glow:'#ff00ff88' },
-  { name:'POLIO',   color:'#4488ff', size:19, spikes:10, pts:25, glow:'#0044ff88' },
-  { name:'EBOLA',   color:'#44ff66', size:23, spikes:7,  pts:30, glow:'#00ff4488' },
-  { name:'RABIES',  color:'#ffff00', size:15, spikes:9,  pts:35, glow:'#ffff0088' },
+  { name:'FLU',     color:'#ff4444', size:40, spikes:8,  pts:10, glow:'#ff000088' },
+  { name:'COVID',   color:'#ff8800', size:48, spikes:12, pts:20, glow:'#ff880088' },
+  { name:'MEASLES', color:'#ff44ff', size:34, spikes:6,  pts:15, glow:'#ff00ff88' },
+  { name:'POLIO',   color:'#4488ff', size:38, spikes:10, pts:25, glow:'#0044ff88' },
+  { name:'EBOLA',   color:'#44ff66', size:44, spikes:7,  pts:30, glow:'#00ff4488' },
+  { name:'RABIES',  color:'#ffff00', size:30, spikes:9,  pts:35, glow:'#ffff0088' },
 ];
 
 // ─── Audio ────────────────────────────────────────────────────────────────────
@@ -270,8 +270,8 @@ function roadHW(z) {
   return ROAD_W_FAR/2 + (ROAD_W_NEAR/2 - ROAD_W_FAR/2)*z;
 }
 function roadCurve() {
-  // Smooth compound sine gives gentle wandering curves
-  return Math.sin(frameCount*0.0042)*170 + Math.sin(frameCount*0.0028)*75;
+  // Aggressive compound sine — big sweeping curves + sharp kinks
+  return Math.sin(frameCount*0.007)*290 + Math.sin(frameCount*0.004)*140 + Math.sin(frameCount*0.0015)*80;
 }
 function roadCX(z) {
   // Road centre x at depth z
@@ -346,24 +346,19 @@ function drawRoad() {
     // Band alternation driven by scroll offset
     const band=Math.floor((i+roadOffset*NUM_STRIPS)%2<1?0:1);
 
-    // Grass colour bands (alternating)
-    const gc=band===0?'#1c8a1c':'#166616';
-    ctx.fillStyle=gc;
-    ctx.beginPath();
-    ctx.moveTo(0,y0); ctx.lineTo(W,y0);
-    ctx.lineTo(W,y1); ctx.lineTo(0,y1);
-    ctx.fill();
+    // Grass — NO alternation, solid; the perspective trapezoids alone give depth
+    // (grass colour already filled by the base gradient rect above)
 
-    // Road surface
-    ctx.fillStyle=band===0?'#30304a':'#242438';
+    // Road surface — very subtle alternation, low contrast
+    ctx.fillStyle=band===0?'#2e2e48':'#282840';
     ctx.beginPath();
     ctx.moveTo(cx0-hw0,y0); ctx.lineTo(cx0+hw0,y0);
     ctx.lineTo(cx1+hw1,y1); ctx.lineTo(cx1-hw1,y1);
     ctx.fill();
 
-    // Rumble strips (red/white alternating)
-    const rw0=hw0*0.065, rw1=hw1*0.065;
-    ctx.fillStyle=band===0?'#cc2200':'#dddddd';
+    // Rumble strips — SOLID colour, thin, no alternation so they don't flash
+    const rw0=hw0*0.038, rw1=hw1*0.038;
+    ctx.fillStyle='#6a3000';
     // Left rumble
     ctx.beginPath();
     ctx.moveTo(cx0-hw0,y0); ctx.lineTo(cx0-hw0+rw0,y0);
@@ -782,11 +777,14 @@ function endGame(win){
 let lastSpawn=0;
 
 function checkCollisions(){
-  const cHW=65;
+  const cHW=62; // car half-width in pixels
   for(const v of viruses){
     if(v.crushed||v.z<0.72||v.z>1.01) continue;
     const vx=virusScreenX(v.lane,v.z);
-    if(Math.abs(vx-carX) > cHW+v.type.size*11) continue;
+    const p=getPersp(v.z);
+    // Collision only when car physically overlaps virus — use actual pixel radius
+    const virusR=p.sc*v.type.size*1.2;
+    if(Math.abs(vx-carX) > cHW+virusR) continue;
 
     v.crushed=true; v.crushedTimer=170;
     crushed++;
@@ -808,20 +806,17 @@ function checkCollisions(){
     flashAlpha=0.45;
     crunchSfx(combo-1);
 
-    const p=getPersp(v.z);
-    const vsx=virusScreenX(v.lane,v.z);
-
     // Crush particles
     for(let i=0;i<22;i++){
       particles.push({
-        x:vsx, y:p.y,
+        x:vx, y:p.y,
         vx:(Math.random()-.5)*12, vy:(Math.random()-.5)*12-3,
         life:55, maxLife:55, color:v.type.color
       });
     }
 
     // Score popup
-    addPopup(combo>1?`x${combo} COMBO! +${pts}`:'+'+pts, vsx, p.y-30,
+    addPopup(combo>1?`x${combo} COMBO! +${pts}`:'+'+pts, vx, p.y-30,
       combo>1?'#ffff00':'#ffffff', combo>1?Math.min(36,20+combo*3):18);
     // Time popup
     addPopup(`+${tBonus.toFixed(1)}s`, W/2+(Math.random()-.5)*80, H*0.38,'#00ff88',20);
@@ -853,9 +848,9 @@ function gameLoop(ts){
   if(rgt) carX=Math.min(W/2+ROAD_W_NEAR/2-72,carX+steerSpeed);
   carSteer+=(( rgt?1:lft?-1:0)-carSteer)*0.13;
 
-  // Subtle road-curve drift (car wants to follow the curve)
+  // Road-curve drift — sharper curves push the car; player must counter-steer
   const cur=roadCurve();
-  carX+=cur*0.006*speed*0.1;
+  carX+=cur*0.016*speed*0.1;
   carX=Math.max(W/2-ROAD_W_NEAR/2+72, Math.min(W/2+ROAD_W_NEAR/2-72, carX));
 
   roadOffset=(roadOffset+speed*0.018)%1;
@@ -923,10 +918,6 @@ function gameLoop(ts){
       ctx.stroke();
     }
   }
-
-  // CRT scanlines
-  ctx.fillStyle='rgba(0,0,0,0.022)';
-  for(let y=0;y<H;y+=3) ctx.fillRect(0,y,W,1);
 
   // Vignette
   const vig=ctx.createRadialGradient(W/2,H/2,H*0.25,W/2,H/2,H*0.85);

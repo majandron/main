@@ -6,26 +6,17 @@
 <title>VIRUS CRUSHER - A Sanofi Road Trip</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    background: #000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    font-family: 'Courier New', monospace;
-    overflow: hidden;
-  }
+  body { background: #000; font-family: 'Courier New', monospace; overflow: hidden; }
   #gameContainer {
-    position: relative;
-    width: 800px;
-    height: 500px;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
     overflow: hidden;
-    border: 4px solid #ff00ff;
-    box-shadow: 0 0 30px #ff00ff, 0 0 60px #ff00ff44;
   }
   canvas { display: block; }
   #ui {
-    position: absolute;
+    position: fixed;
     top: 0; left: 0; right: 0;
     pointer-events: none;
     z-index: 10;
@@ -33,101 +24,100 @@
   #hud {
     display: flex;
     justify-content: space-between;
-    padding: 8px 12px;
-    background: rgba(0,0,0,0.7);
+    padding: 8px 16px;
+    background: rgba(0,0,0,0.75);
     border-bottom: 2px solid #ff00ff;
   }
   .hud-item {
     color: #fff;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: bold;
     text-shadow: 0 0 8px #ff00ff;
   }
   .hud-item span { color: #ff00ff; }
   #royContainer {
-    position: absolute;
-    bottom: 90px;
-    right: -160px;
+    position: fixed;
+    bottom: 110px;
+    right: -175px;
     transition: right 0.3s ease;
     z-index: 20;
     pointer-events: none;
   }
-  #royContainer.visible { right: -10px; }
+  #royContainer.visible { right: 0; }
   #royBubble {
     position: absolute;
-    bottom: 80px;
-    right: 140px;
+    bottom: 85px;
+    right: 150px;
     background: #fff;
     color: #000;
-    padding: 6px 10px;
+    padding: 7px 11px;
     border-radius: 10px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: bold;
-    white-space: nowrap;
-    max-width: 160px;
-    white-space: normal;
+    max-width: 170px;
     text-align: center;
     border: 2px solid #000;
+    white-space: normal;
   }
   #royBubble::after {
     content: '';
     position: absolute;
     bottom: -10px;
-    right: 20px;
+    right: 22px;
     border: 5px solid transparent;
     border-top-color: #000;
   }
   #overlay {
-    position: absolute;
+    position: fixed;
     inset: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: rgba(0,0,0,0.85);
+    background: rgba(0,0,0,0.87);
     z-index: 30;
     color: #fff;
   }
   #overlay h1 {
-    font-size: 36px;
+    font-size: 42px;
     color: #ff00ff;
-    text-shadow: 0 0 20px #ff00ff;
+    text-shadow: 0 0 22px #ff00ff;
     margin-bottom: 8px;
-    letter-spacing: 4px;
+    letter-spacing: 5px;
   }
   #overlay h2 {
-    font-size: 22px;
+    font-size: 24px;
     color: #00ffff;
-    text-shadow: 0 0 12px #00ffff;
-    margin-bottom: 20px;
+    text-shadow: 0 0 14px #00ffff;
+    margin-bottom: 22px;
   }
-  #overlay p { font-size: 13px; color: #aaa; margin: 4px 0; }
+  #overlay p { font-size: 14px; color: #aaa; margin: 4px 0; }
   #startBtn {
-    margin-top: 20px;
-    padding: 12px 40px;
+    margin-top: 22px;
+    padding: 14px 44px;
     background: #ff00ff;
     color: #000;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
     font-family: 'Courier New', monospace;
     border: none;
     cursor: pointer;
-    letter-spacing: 2px;
-    box-shadow: 0 0 20px #ff00ff;
+    letter-spacing: 3px;
+    box-shadow: 0 0 22px #ff00ff;
     transition: all 0.1s;
   }
-  #startBtn:hover { background: #fff; box-shadow: 0 0 30px #fff; }
+  #startBtn:hover { background: #fff; box-shadow: 0 0 34px #fff; }
   #scoreDisplay {
-    font-size: 28px;
+    font-size: 30px;
     color: #ff0;
-    text-shadow: 0 0 15px #ff0;
-    margin: 10px 0;
+    text-shadow: 0 0 16px #ff0;
+    margin: 12px 0;
   }
 </style>
 </head>
 <body>
 <div id="gameContainer">
-  <canvas id="gameCanvas" width="800" height="500"></canvas>
+  <canvas id="gameCanvas"></canvas>
   <div id="ui">
     <div id="hud">
       <div class="hud-item">SCORE: <span id="scoreHud">0</span></div>
@@ -138,15 +128,14 @@
   </div>
   <div id="royContainer">
     <div id="royBubble">Nice job!</div>
-    <canvas id="royCanvas" width="150" height="120"></canvas>
+    <canvas id="royCanvas" width="160" height="130"></canvas>
   </div>
   <div id="overlay">
     <h1>VIRUS CRUSHER</h1>
     <h2>A SANOFI ROAD TRIP</h2>
     <p>Drive your Ferrari and CRUSH viruses!</p>
     <p>Each crush adds time. Flatten 100 to WIN!</p>
-    <p style="margin-top:10px;color:#ff0">&#8592; &#8594; Arrow Keys or A/D to steer</p>
-    <p style="color:#ff0">Speed controls automatically</p>
+    <p style="margin-top:12px;color:#ff0">&#8592; &#8594; Arrow Keys or A/D to steer</p>
     <button id="startBtn" onclick="startGame()">INSERT COIN</button>
   </div>
 </div>
@@ -157,9 +146,18 @@ const ctx = canvas.getContext('2d');
 const royCanvas = document.getElementById('royCanvas');
 const royCtx = royCanvas.getContext('2d');
 
-const W = 800, H = 500;
-const ROAD_W_FAR = 180, ROAD_W_NEAR = 500;
-const HORIZON = 160;
+// Full-screen dimensions
+const W = window.innerWidth;
+const H = window.innerHeight;
+canvas.width = W;
+canvas.height = H;
+
+// Road config — low horizon = lots of road visible
+const HORIZON    = Math.round(H * 0.20);
+const ROAD_BOTTOM = H - 5;
+const ROAD_W_FAR  = Math.round(W * 0.14);
+const ROAD_W_NEAR = Math.round(W * 0.92);
+const CAR_Y = H - 130;  // car center y
 
 let gameState = 'menu';
 let score = 0;
@@ -169,14 +167,13 @@ let timerFloat = 30;
 let speed = 0;
 let maxSpeed = 3;
 let carX = W / 2;
-let carLane = 0; // -1, 0, 1
+let carSteer = 0;  // visual tilt
 let frameCount = 0;
 let roadOffset = 0;
 let viruses = [];
 let particles = [];
 let royVisible = false;
 let royTimer = 0;
-let royPhrase = '';
 let lastTime = 0;
 let difficulty = 1;
 let finishMode = false;
@@ -186,24 +183,24 @@ let audioCtx = null;
 const ROY_PHRASES = [
   "NICE JOB!", "FLATTEN IT!", "SANOFI WINS!", "GET THAT VIRUS!",
   "BOOM! CRUSHED!", "ROY APPROVES!", "SCIENCE WINS!", "AMAZING!",
-  "KEEP ROLLING!", "THAT'S THE WAY!", "YEAH BABY!", "OBLITERATED!"
+  "KEEP ROLLING!", "THAT'S THE WAY!", "YEAH BABY!", "OBLITERATED!",
+  "SQUISH IT!", "ONE MORE DOWN!", "MEDICINE WINS!"
 ];
 
 const VIRUS_TYPES = [
-  { name: 'FLU', color: '#ff4444', size: 22, spikes: 8, pts: 10 },
-  { name: 'COVID', color: '#ff8800', size: 26, spikes: 12, pts: 20 },
-  { name: 'MEASLES', color: '#ff44ff', size: 18, spikes: 6, pts: 15 },
-  { name: 'POLIO', color: '#4444ff', size: 20, spikes: 10, pts: 25 },
-  { name: 'EBOLA', color: '#44ff44', size: 24, spikes: 7, pts: 30 },
-  { name: 'RABIES', color: '#ffff00', size: 16, spikes: 9, pts: 35 },
+  { name: 'FLU',     color: '#ff4444', size: 22, spikes: 8,  pts: 10 },
+  { name: 'COVID',   color: '#ff8800', size: 26, spikes: 12, pts: 20 },
+  { name: 'MEASLES', color: '#ff44ff', size: 18, spikes: 6,  pts: 15 },
+  { name: 'POLIO',   color: '#4488ff', size: 20, spikes: 10, pts: 25 },
+  { name: 'EBOLA',   color: '#44ff66', size: 24, spikes: 7,  pts: 30 },
+  { name: 'RABIES',  color: '#ffff00', size: 16, spikes: 9,  pts: 35 },
 ];
 
-// --- Audio Engine ---
+// ─── Audio ──────────────────────────────────────────────────────────────────
 function getAudioCtx() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   return audioCtx;
 }
-
 function playNote(freq, type, duration, vol = 0.3, delay = 0) {
   const ac = getAudioCtx();
   const osc = ac.createOscillator();
@@ -216,385 +213,428 @@ function playNote(freq, type, duration, vol = 0.3, delay = 0) {
   osc.start(ac.currentTime + delay);
   osc.stop(ac.currentTime + delay + duration);
 }
-
 function playCrunchSound() {
-  playNote(80, 'sawtooth', 0.15, 0.4);
-  playNote(120, 'square', 0.1, 0.3, 0.05);
-  playNote(60, 'sawtooth', 0.2, 0.5, 0.1);
+  playNote(80,  'sawtooth', 0.15, 0.4);
+  playNote(120, 'square',   0.10, 0.3, 0.05);
+  playNote(60,  'sawtooth', 0.20, 0.5, 0.10);
 }
-
 function playEngineNote() {
   if (frameCount % 4 !== 0) return;
-  const freq = 60 + speed * 30;
-  playNote(freq, 'sawtooth', 0.08, 0.05);
+  playNote(60 + speed * 30, 'sawtooth', 0.08, 0.05);
 }
-
+let bgmTimeout = null;
 function playBGM() {
-  // 8-bit style melody
   const melody = [
-    [523,0],[659,0.2],[784,0.4],[1047,0.6],[784,0.8],[659,1.0],
+    [523,0],[659,.2],[784,.4],[1047,.6],[784,.8],[659,1.0],
     [523,1.2],[392,1.4],[440,1.6],[523,1.8],[659,2.0],[784,2.2],
     [880,2.4],[784,2.6],[659,2.8],[523,3.0]
   ];
   melody.forEach(([f,d]) => playNote(f, 'square', 0.18, 0.12, d));
-  setTimeout(playBGM, 3500);
+  bgmTimeout = setTimeout(playBGM, 3500);
 }
-
+function stopBGM() { clearTimeout(bgmTimeout); bgmTimeout = null; }
 function playWinSound() {
-  const seq = [523,659,784,1047,784,1047,1319];
-  seq.forEach((f,i) => playNote(f, 'square', 0.3, 0.3, i * 0.15));
+  [523,659,784,1047,784,1047,1319].forEach((f,i) => playNote(f,'square',0.3,0.3,i*0.15));
 }
-
 function playGameOverSound() {
-  const seq = [400,350,300,250,200,150];
-  seq.forEach((f,i) => playNote(f, 'sawtooth', 0.3, 0.3, i * 0.2));
+  [400,350,300,250,200,150].forEach((f,i) => playNote(f,'sawtooth',0.3,0.3,i*0.2));
 }
 
-// --- Road Rendering ---
-function getRoadX(lane, z) {
-  const t = z / H;
-  const roadHalfW = ROAD_W_FAR/2 + (ROAD_W_NEAR/2 - ROAD_W_FAR/2) * t;
-  const center = W / 2;
-  const laneW = roadHalfW / 1.5;
-  return center + lane * laneW;
-}
-
-function getPerspective(worldZ) {
-  // worldZ: 0 = horizon, 1 = car position
-  const t = worldZ;
+// ─── Perspective helpers ─────────────────────────────────────────────────────
+function getPerspective(z) {
   return {
-    screenY: HORIZON + t * (H - HORIZON - 80),
-    scale: 0.2 + t * 0.8
+    screenY: HORIZON + z * (ROAD_BOTTOM - HORIZON),
+    scale: 0.12 + z * 0.88
   };
 }
+function getRoadHalfW(z) {
+  return ROAD_W_FAR/2 + (ROAD_W_NEAR/2 - ROAD_W_FAR/2) * z;
+}
+function getVirusScreenX(lane, z) {
+  return W/2 + lane * (getRoadHalfW(z) / 1.5);
+}
 
+// ─── Sky & scenery ───────────────────────────────────────────────────────────
 function drawSky() {
   const grad = ctx.createLinearGradient(0, 0, 0, HORIZON);
-  grad.addColorStop(0, '#000033');
+  grad.addColorStop(0,   '#000033');
   grad.addColorStop(0.5, '#110022');
-  grad.addColorStop(1, '#330044');
+  grad.addColorStop(1,   '#330044');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, W, HORIZON);
 
   // Stars
-  ctx.fillStyle = '#fff';
-  for (let i = 0; i < 80; i++) {
-    const sx = (i * 173 + frameCount * 0.2) % W;
+  for (let i = 0; i < 120; i++) {
+    const sx = (i * 173 + frameCount * 0.15) % W;
     const sy = (i * 97) % HORIZON;
     const blink = Math.sin(frameCount * 0.05 + i) > 0.7;
+    ctx.fillStyle = '#fff';
     ctx.fillRect(sx, sy, blink ? 2 : 1, blink ? 2 : 1);
   }
 
   // Sun
-  const sunX = W * 0.5 + Math.sin(frameCount * 0.005) * 60;
-  const sunY = HORIZON - 30;
-  const sunGrad = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 50);
-  sunGrad.addColorStop(0, '#ff00ff');
-  sunGrad.addColorStop(0.4, '#ff4488');
-  sunGrad.addColorStop(1, 'rgba(255,0,255,0)');
-  ctx.fillStyle = sunGrad;
+  const sunX = W * 0.5;
+  const sunY = HORIZON - 38;
+  const r = Math.min(W, H) * 0.065;
+  const sg = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, r * 1.6);
+  sg.addColorStop(0,   '#ff00ff');
+  sg.addColorStop(0.5, '#ff4488');
+  sg.addColorStop(1,   'rgba(255,0,255,0)');
+  ctx.fillStyle = sg;
   ctx.beginPath();
-  ctx.arc(sunX, sunY, 50, 0, Math.PI * 2);
+  ctx.arc(sunX, sunY, r * 1.6, 0, Math.PI * 2);
   ctx.fill();
-
-  // Striped sun effect
+  // Stripes over sun
   ctx.fillStyle = '#000033';
-  for (let i = 0; i < 6; i++) {
-    ctx.fillRect(sunX - 50, sunY + 8 + i * 8, 100, 4);
-  }
+  for (let i = 0; i < 7; i++) ctx.fillRect(sunX - r, sunY + r * 0.18 + i * r * 0.23, r * 2, r * 0.12);
 
-  // Palm trees silhouettes
-  drawPalmTree(100, HORIZON, 0.6);
-  drawPalmTree(700, HORIZON, 0.7);
-  drawPalmTree(50, HORIZON, 0.4);
-  drawPalmTree(750, HORIZON, 0.5);
+  // Palm silhouettes
+  const palms = [
+    [W*0.06, HORIZON, 0.5], [W*0.12, HORIZON, 0.7], [W*0.88, HORIZON, 0.6],
+    [W*0.94, HORIZON, 0.45], [W*0.02, HORIZON, 0.35]
+  ];
+  palms.forEach(([px, py, sc]) => drawPalmTree(px, py, sc));
 }
 
-function drawPalmTree(x, baseY, scale) {
+function drawPalmTree(x, baseY, sc) {
   ctx.fillStyle = '#110022';
-  // Trunk
-  ctx.fillRect(x - 4 * scale, baseY - 60 * scale, 8 * scale, 60 * scale);
-  // Fronds
-  ctx.beginPath();
-  ctx.fillStyle = '#110022';
+  ctx.fillRect(x - 4*sc, baseY - 70*sc, 8*sc, 70*sc);
+  ctx.strokeStyle = '#110022';
   for (let a = 0; a < 6; a++) {
-    const angle = (a / 6) * Math.PI - Math.PI/2 + Math.sin(frameCount * 0.02) * 0.1;
+    const angle = (a/6) * Math.PI - Math.PI/2 + Math.sin(frameCount*0.02)*0.08;
     ctx.beginPath();
-    ctx.moveTo(x, baseY - 60 * scale);
-    ctx.lineTo(x + Math.cos(angle) * 35 * scale, baseY - 60 * scale + Math.sin(angle) * 20 * scale);
-    ctx.lineWidth = 4 * scale;
-    ctx.strokeStyle = '#110022';
+    ctx.moveTo(x, baseY - 70*sc);
+    ctx.lineTo(x + Math.cos(angle)*38*sc, baseY - 70*sc + Math.sin(angle)*22*sc);
+    ctx.lineWidth = 5*sc;
     ctx.stroke();
   }
 }
 
+// ─── Road ────────────────────────────────────────────────────────────────────
 function drawRoad() {
-  // Ground
+  // Dirt / shoulder
   ctx.fillStyle = '#1a0a2e';
-  ctx.fillRect(0, HORIZON, W, H - HORIZON);
+  ctx.fillRect(0, HORIZON, W, ROAD_BOTTOM - HORIZON);
 
   // Road surface
-  const roadGrad = ctx.createLinearGradient(0, HORIZON, 0, H);
-  roadGrad.addColorStop(0, '#2a2a3a');
-  roadGrad.addColorStop(1, '#1a1a2a');
-  ctx.fillStyle = roadGrad;
-
+  const rg = ctx.createLinearGradient(0, HORIZON, 0, ROAD_BOTTOM);
+  rg.addColorStop(0, '#282838');
+  rg.addColorStop(1, '#1a1a2a');
+  ctx.fillStyle = rg;
   ctx.beginPath();
   ctx.moveTo(W/2 - ROAD_W_FAR/2, HORIZON);
   ctx.lineTo(W/2 + ROAD_W_FAR/2, HORIZON);
-  ctx.lineTo(W/2 + ROAD_W_NEAR/2, H);
-  ctx.lineTo(W/2 - ROAD_W_NEAR/2, H);
+  ctx.lineTo(W/2 + ROAD_W_NEAR/2, ROAD_BOTTOM);
+  ctx.lineTo(W/2 - ROAD_W_NEAR/2, ROAD_BOTTOM);
   ctx.closePath();
   ctx.fill();
 
-  // Road stripes
-  ctx.strokeStyle = '#ffff00';
-  ctx.lineWidth = 2;
-  const stripeCount = 12;
+  // Dashed lane markings (centre & side lanes)
+  const stripeCount = 14;
   for (let i = 0; i < stripeCount; i++) {
     const t0 = ((i / stripeCount) + roadOffset) % 1;
-    const t1 = (((i + 0.4) / stripeCount) + roadOffset) % 1;
+    const t1 = (((i + 0.38) / stripeCount) + roadOffset) % 1;
     if (t0 > t1) continue;
-    const p0 = getPerspective(t0);
-    const p1 = getPerspective(t1);
-    const lx0 = W/2 + (-1) * (ROAD_W_FAR/3 + (ROAD_W_NEAR/3 - ROAD_W_FAR/3) * t0);
-    const rx0 = W/2 + (1) * (ROAD_W_FAR/3 + (ROAD_W_NEAR/3 - ROAD_W_FAR/3) * t0);
-    const lx1 = W/2 + (-1) * (ROAD_W_FAR/3 + (ROAD_W_NEAR/3 - ROAD_W_FAR/3) * t1);
-    const rx1 = W/2 + (1) * (ROAD_W_FAR/3 + (ROAD_W_NEAR/3 - ROAD_W_FAR/3) * t1);
-
-    ctx.beginPath();
-    ctx.moveTo(lx0, p0.screenY); ctx.lineTo(lx1, p1.screenY);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(rx0, p0.screenY); ctx.lineTo(rx1, p1.screenY);
-    ctx.stroke();
+    const p0 = getPerspective(t0), p1 = getPerspective(t1);
+    // Two divider lines (1/3 and 2/3 of road width from centre)
+    for (const frac of [-1, 1]) {
+      const x0 = W/2 + frac * (ROAD_W_FAR/2 + (ROAD_W_NEAR/2 - ROAD_W_FAR/2)*t0) * (2/3);
+      const x1 = W/2 + frac * (ROAD_W_FAR/2 + (ROAD_W_NEAR/2 - ROAD_W_FAR/2)*t1) * (2/3);
+      ctx.beginPath();
+      ctx.moveTo(x0, p0.screenY);
+      ctx.lineTo(x1, p1.screenY);
+      ctx.strokeStyle = '#ffff00';
+      ctx.lineWidth = Math.max(1, 2 * p0.scale);
+      ctx.stroke();
+    }
   }
 
-  // Edge lines
+  // Road edges
   ctx.strokeStyle = '#ffffff';
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(W/2 - ROAD_W_FAR/2, HORIZON);
-  ctx.lineTo(W/2 - ROAD_W_NEAR/2, H);
+  ctx.lineTo(W/2 - ROAD_W_NEAR/2, ROAD_BOTTOM);
   ctx.stroke();
   ctx.beginPath();
   ctx.moveTo(W/2 + ROAD_W_FAR/2, HORIZON);
-  ctx.lineTo(W/2 + ROAD_W_NEAR/2, H);
+  ctx.lineTo(W/2 + ROAD_W_NEAR/2, ROAD_BOTTOM);
   ctx.stroke();
 
-  // Finish line
-  if (finishMode) {
-    drawFinishLine();
-  }
+  if (finishMode) drawFinishLine();
 }
 
 function drawFinishLine() {
-  const t = 0.3 + finishProgress * 0.5;
+  const t = Math.min(0.98, 0.25 + finishProgress * 0.6);
   const p = getPerspective(t);
-  const lx = W/2 - (ROAD_W_FAR/2 + (ROAD_W_NEAR/2 - ROAD_W_FAR/2) * t);
-  const rx = W/2 + (ROAD_W_FAR/2 + (ROAD_W_NEAR/2 - ROAD_W_FAR/2) * t);
-  const scale = p.scale;
-  const y = p.screenY;
-  const h = 8 * scale;
-
-  const squares = 8;
-  const sqW = (rx - lx) / squares;
-  for (let i = 0; i < squares; i++) {
+  const lx = W/2 - getRoadHalfW(t);
+  const rx = W/2 + getRoadHalfW(t);
+  const y  = p.screenY;
+  const h  = Math.max(6, 10 * p.scale);
+  const sq = 10;
+  const sqW = (rx - lx) / sq;
+  for (let i = 0; i < sq; i++) {
     ctx.fillStyle = (i % 2 === 0) ? '#fff' : '#000';
-    ctx.fillRect(lx + i * sqW, y - h/2, sqW, h);
-  }
-  for (let i = 0; i < squares; i++) {
+    ctx.fillRect(lx + i*sqW, y - h, sqW, h);
     ctx.fillStyle = (i % 2 === 1) ? '#fff' : '#000';
-    ctx.fillRect(lx + i * sqW, y + h/2, sqW, h);
+    ctx.fillRect(lx + i*sqW, y,     sqW, h);
   }
 }
 
+// ─── Virus ───────────────────────────────────────────────────────────────────
 function drawVirus(v) {
-  const p = getPerspective(v.z);
-  const roadHalfW = ROAD_W_FAR/2 + (ROAD_W_NEAR/2 - ROAD_W_FAR/2) * v.z;
-  const laneW = roadHalfW / 1.5;
-  const sx = W/2 + v.lane * laneW;
+  const p  = getPerspective(v.z);
+  const sx = getVirusScreenX(v.lane, v.z);
   const sy = p.screenY;
-  const s = p.scale * v.type.size;
+  const s  = p.scale * v.type.size;
 
   if (v.crushed) {
-    // Flat splat
+    // Flat squished state
+    const fadeAlpha = v.z > 0.95 ? Math.max(0, 1 - (v.z - 0.95) / 0.20) : 1;
+    ctx.globalAlpha = fadeAlpha;
     ctx.save();
     ctx.translate(sx, sy);
-    ctx.scale(1, 0.2);
+    ctx.scale(1.7, 0.20);   // squash flat
+
+    // Splat body
     ctx.beginPath();
-    ctx.arc(0, 0, s * 1.5, 0, Math.PI * 2);
-    ctx.fillStyle = v.type.color + '88';
+    ctx.arc(0, 0, s * 1.3, 0, Math.PI*2);
+    ctx.fillStyle = v.type.color + 'cc';
     ctx.fill();
+    ctx.strokeStyle = v.type.color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Flattened spikes radiate outward
+    for (let i = 0; i < v.type.spikes; i++) {
+      const a = (i / v.type.spikes) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a)*s,          Math.sin(a)*s);
+      ctx.lineTo(Math.cos(a)*(s*1.9+6),  Math.sin(a)*(s*1.9+6));
+      ctx.strokeStyle = v.type.color;
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(Math.cos(a)*(s*1.9+4), Math.sin(a)*(s*1.9+4), 3, 0, Math.PI*2);
+      ctx.fillStyle = v.type.color;
+      ctx.fill();
+    }
+
+    // X eyes
+    ctx.strokeStyle = '#000';
+    ctx.lineWidth = Math.max(1.5, 2.5 * p.scale);
+    const ex = s*0.3, es = s*0.22;
+    for (const side of [-1, 1]) {
+      const ox = side * ex;
+      ctx.beginPath(); ctx.moveTo(ox-es, -es); ctx.lineTo(ox+es,  es); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ox+es, -es); ctx.lineTo(ox-es,  es); ctx.stroke();
+    }
+
     ctx.restore();
+    ctx.globalAlpha = 1;
+
+    // Label outside squash transform
+    if (fadeAlpha > 0.2) {
+      ctx.globalAlpha = fadeAlpha;
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${Math.max(7, 10 * p.scale)}px Courier New`;
+      ctx.textAlign = 'center';
+      ctx.fillText('\u2605 ' + v.type.name + ' \u2605', sx, sy + s*0.35 + 12*p.scale);
+      ctx.globalAlpha = 1;
+    }
     return;
   }
 
+  // Normal (alive) virus
   ctx.save();
   ctx.translate(sx, sy);
   ctx.rotate(v.rot);
 
-  // Body
   ctx.beginPath();
-  ctx.arc(0, 0, s, 0, Math.PI * 2);
+  ctx.arc(0, 0, s, 0, Math.PI*2);
   ctx.fillStyle = v.type.color;
   ctx.fill();
   ctx.strokeStyle = '#fff';
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Spikes
   for (let i = 0; i < v.type.spikes; i++) {
     const a = (i / v.type.spikes) * Math.PI * 2;
-    const ox = Math.cos(a) * s;
-    const oy = Math.sin(a) * s;
+    const tip = s + 7 * p.scale;
     ctx.beginPath();
-    ctx.moveTo(ox, oy);
-    ctx.lineTo(Math.cos(a) * (s + 6 * p.scale), Math.sin(a) * (s + 6 * p.scale));
+    ctx.moveTo(Math.cos(a)*s, Math.sin(a)*s);
+    ctx.lineTo(Math.cos(a)*tip, Math.sin(a)*tip);
     ctx.strokeStyle = v.type.color;
-    ctx.lineWidth = 2 * p.scale;
+    ctx.lineWidth = 2.5 * p.scale;
     ctx.stroke();
     ctx.beginPath();
-    ctx.arc(Math.cos(a) * (s + 5 * p.scale), Math.sin(a) * (s + 5 * p.scale), 2 * p.scale, 0, Math.PI * 2);
+    ctx.arc(Math.cos(a)*tip, Math.sin(a)*tip, 2.5*p.scale, 0, Math.PI*2);
     ctx.fillStyle = '#fff';
     ctx.fill();
   }
 
   // Face
   ctx.fillStyle = '#000';
-  ctx.beginPath(); ctx.arc(-s*0.3, -s*0.2, s*0.15, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(s*0.3, -s*0.2, s*0.15, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-s*0.28, -s*0.2, s*0.16, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc( s*0.28, -s*0.2, s*0.16, 0, Math.PI*2); ctx.fill();
   ctx.beginPath();
-  ctx.arc(0, s*0.1, s*0.3, 0, Math.PI);
+  ctx.arc(0, s*0.1, s*0.32, 0, Math.PI);
   ctx.strokeStyle = '#000';
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Label
   ctx.fillStyle = '#fff';
-  ctx.font = `bold ${Math.max(7, 9 * p.scale)}px Courier New`;
+  ctx.font = `bold ${Math.max(7, 10 * p.scale)}px Courier New`;
   ctx.textAlign = 'center';
-  ctx.fillText(v.type.name, 0, s + 10 * p.scale);
+  ctx.fillText(v.type.name, 0, s + 11*p.scale);
 
   ctx.restore();
 }
 
+// ─── Car (rear-view, front pointing toward horizon) ──────────────────────────
 function drawCar() {
-  const carY = H - 80;
-  const cx = carX;
-
   ctx.save();
-  ctx.translate(cx, carY);
+  ctx.translate(carX, CAR_Y);
+  ctx.rotate(carSteer * 0.09);   // lean into turn
 
-  // Shadow
+  // ── Shadow ──
   ctx.beginPath();
-  ctx.ellipse(0, 20, 60, 12, 0, 0, Math.PI*2);
-  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.ellipse(0, 52, 72, 16, 0, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(0,0,0,0.45)';
   ctx.fill();
 
-  // Body - Ferrari red
-  ctx.fillStyle = '#cc0000';
-  // Main body
+  // ── Outer body silhouette ──
+  // Front (toward horizon) is UP (negative y), rear is DOWN (positive y)
   ctx.beginPath();
-  ctx.moveTo(-55, 10);
-  ctx.lineTo(-60, 0);
-  ctx.lineTo(-45, -15);
-  ctx.lineTo(-20, -25);
-  ctx.lineTo(10, -28);
-  ctx.lineTo(35, -22);
-  ctx.lineTo(55, -10);
-  ctx.lineTo(60, 0);
-  ctx.lineTo(55, 10);
-  ctx.lineTo(-55, 10);
+  ctx.moveTo(-58, 42);   // rear-left corner  (visible to player)
+  ctx.lineTo( 58, 42);   // rear-right corner
+  ctx.lineTo( 52,  4);   // right flank mid
+  ctx.lineTo( 38,-48);   // right front corner
+  ctx.lineTo(-38,-48);   // left front corner
+  ctx.lineTo(-52,  4);   // left flank mid
   ctx.closePath();
+  ctx.fillStyle = '#cc0000';
   ctx.fill();
-  ctx.strokeStyle = '#aa0000';
+  ctx.strokeStyle = '#880000';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // ── Roof cabin (darker, inset) ──
+  ctx.beginPath();
+  ctx.moveTo(-26, 24);
+  ctx.lineTo( 26, 24);
+  ctx.lineTo( 20,-28);
+  ctx.lineTo(-20,-28);
+  ctx.closePath();
+  ctx.fillStyle = '#991100';
+  ctx.fill();
+
+  // ── Rear window (player sees back of car) ──
+  ctx.beginPath();
+  ctx.moveTo(-20, 21);
+  ctx.lineTo( 20, 21);
+  ctx.lineTo( 14, -3);
+  ctx.lineTo(-14, -3);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(80,160,255,0.65)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(160,210,255,0.5)';
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Roof/windshield
-  ctx.fillStyle = '#aa0000';
+  // ── Front windshield (small, farther away) ──
   ctx.beginPath();
-  ctx.moveTo(-15, -25);
-  ctx.lineTo(-5, -38);
-  ctx.lineTo(25, -38);
-  ctx.lineTo(35, -25);
+  ctx.moveTo(-14,-28);
+  ctx.lineTo( 14,-28);
+  ctx.lineTo( 10,-44);
+  ctx.lineTo(-10,-44);
   ctx.closePath();
+  ctx.fillStyle = 'rgba(80,160,255,0.55)';
   ctx.fill();
 
-  // Windshield
-  ctx.fillStyle = 'rgba(100,200,255,0.7)';
+  // ── Side accent stripes ──
+  ctx.strokeStyle = '#ffdd00';
+  ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(-52, 38); ctx.lineTo(-46,-44); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo( 52, 38); ctx.lineTo( 46,-44); ctx.stroke();
+
+  // ── Rear bumper ──
   ctx.beginPath();
-  ctx.moveTo(-10, -26);
-  ctx.lineTo(-3, -36);
-  ctx.lineTo(22, -36);
-  ctx.lineTo(30, -26);
+  ctx.moveTo(-58, 40); ctx.lineTo(58, 40);
+  ctx.lineTo(55, 50);  ctx.lineTo(-55,50);
   ctx.closePath();
+  ctx.fillStyle = '#770000';
   ctx.fill();
 
-  // Side windows
-  ctx.fillStyle = 'rgba(100,200,255,0.5)';
-  ctx.fillRect(-40, -22, 20, 10);
-
-  // Headlights
-  ctx.fillStyle = '#ffff88';
-  ctx.shadowColor = '#ffff00';
+  // ── Taillights ──
+  ctx.shadowColor = '#ff0000';
   ctx.shadowBlur = 10;
-  ctx.fillRect(48, -8, 10, 6);
-  ctx.fillRect(48, 2, 10, 6);
+  ctx.fillStyle = '#ff2200';
+  ctx.fillRect(-56, 26, 24, 12);
+  ctx.fillRect( 32, 26, 24, 12);
+  // Centre brake light
+  ctx.fillStyle = '#ff6600';
+  ctx.fillRect(-10, 28, 20, 8);
   ctx.shadowBlur = 0;
 
-  // Taillights
-  ctx.fillStyle = '#ff2200';
-  ctx.fillRect(-60, -5, 6, 8);
+  // ── License plate ──
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(-24, 41, 48, 13);
+  ctx.fillStyle = '#0000aa';
+  ctx.font = 'bold 9px Courier New';
+  ctx.textAlign = 'center';
+  ctx.fillText('SANOFI', 0, 52);
 
-  // Wheels
-  ctx.fillStyle = '#222';
-  ctx.beginPath(); ctx.arc(-35, 12, 12, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(35, 12, 12, 0, Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#888';
-  ctx.beginPath(); ctx.arc(-35, 12, 6, 0, Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(35, 12, 6, 0, Math.PI*2); ctx.fill();
-  // Wheel spin
-  ctx.strokeStyle = '#ccc';
-  ctx.lineWidth = 2;
-  for (let a = 0; a < 4; a++) {
-    const angle = (a/4) * Math.PI*2 + frameCount * 0.3;
-    ctx.beginPath();
-    ctx.moveTo(-35 + Math.cos(angle)*2, 12 + Math.sin(angle)*2);
-    ctx.lineTo(-35 + Math.cos(angle)*6, 12 + Math.sin(angle)*6);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(35 + Math.cos(angle)*2, 12 + Math.sin(angle)*2);
-    ctx.lineTo(35 + Math.cos(angle)*6, 12 + Math.sin(angle)*6);
-    ctx.stroke();
+  // ── Rear wheels (large, at the bottom) ──
+  for (const wx of [-64, 64]) {
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(wx, 32, 18, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#444';
+    ctx.beginPath(); ctx.arc(wx, 32, 11, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#222';
+    ctx.beginPath(); ctx.arc(wx, 32,  5, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#777';
+    ctx.lineWidth = 1.5;
+    for (let s = 0; s < 5; s++) {
+      const a = (s/5)*Math.PI*2 + frameCount*0.22;
+      ctx.beginPath();
+      ctx.moveTo(wx + Math.cos(a)*3,  32 + Math.sin(a)*3);
+      ctx.lineTo(wx + Math.cos(a)*11, 32 + Math.sin(a)*11);
+      ctx.stroke();
+    }
   }
 
-  // Ferrari prancing horse logo
-  ctx.fillStyle = '#ffd700';
-  ctx.font = 'bold 12px serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('🐎', 5, -15);
+  // ── Front wheels (smaller — perspective makes them appear smaller) ──
+  for (const wx of [-42, 42]) {
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(wx, -40, 12, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#333';
+    ctx.beginPath(); ctx.arc(wx, -40,  7, 0, Math.PI*2); ctx.fill();
+  }
 
-  // License plate
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(-22, 4, 44, 12);
-  ctx.fillStyle = '#0000aa';
-  ctx.font = 'bold 8px Courier New';
+  // ── Ferrari horse ──
+  ctx.font = '15px serif';
   ctx.textAlign = 'center';
-  ctx.fillText('SANOFI', 0, 14);
+  ctx.fillText('\uD83D\uDC0E', 0, -18);
 
-  // Exhaust particles
-  if (speed > 1) {
-    for (let i = 0; i < 2; i++) {
+  // ── Headlights (front, small) ──
+  ctx.shadowColor = '#ffffaa';
+  ctx.shadowBlur = 8;
+  ctx.fillStyle = '#ffffcc';
+  ctx.fillRect(-36,-50, 14, 5);
+  ctx.fillRect( 22,-50, 14, 5);
+  ctx.shadowBlur = 0;
+
+  // Exhaust smoke from rear corners
+  if (speed > 0.8) {
+    for (const [ex, ey] of [[-48, 50], [48, 50]]) {
       particles.push({
-        x: cx - 55 + (Math.random()-0.5)*5,
-        y: carY + 5 + (Math.random()-0.5)*3,
-        vx: -speed * 2 - Math.random() * 2,
-        vy: (Math.random()-0.5) * 1,
-        life: 20,
-        maxLife: 20,
-        color: `hsl(${20+Math.random()*20},80%,60%)`
+        x: carX + ex + (Math.random()-0.5)*4,
+        y: CAR_Y + ey,
+        vx: (Math.random()-0.5) * 1.5,
+        vy: speed * 1.8 + Math.random()*2,  // drift downward (behind car)
+        life: 28, maxLife: 28,
+        color: `hsl(${15+Math.random()*20},65%,${50+Math.random()*25}%)`
       });
     }
   }
@@ -602,174 +642,134 @@ function drawCar() {
   ctx.restore();
 }
 
+// ─── Particles ───────────────────────────────────────────────────────────────
 function drawParticles() {
   particles = particles.filter(p => p.life > 0);
-  particles.forEach(p => {
+  for (const p of particles) {
     p.x += p.vx;
     p.y += p.vy;
     p.life--;
     const alpha = p.life / p.maxLife;
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 3 * alpha, 0, Math.PI*2);
+    ctx.arc(p.x, p.y, 4 * alpha, 0, Math.PI*2);
     ctx.fillStyle = p.color;
     ctx.globalAlpha = alpha;
     ctx.fill();
-    ctx.globalAlpha = 1;
-  });
+  }
+  ctx.globalAlpha = 1;
 }
 
+// ─── Roy ─────────────────────────────────────────────────────────────────────
 function drawRoy() {
   const rc = royCtx;
-  rc.clearRect(0, 0, 150, 120);
+  rc.clearRect(0, 0, 160, 130);
 
-  // Body
-  rc.fillStyle = '#f5c5a0';
   // Head
-  rc.beginPath();
-  rc.arc(75, 55, 30, 0, Math.PI*2);
-  rc.fill();
-  rc.strokeStyle = '#cc9966';
-  rc.lineWidth = 2;
-  rc.stroke();
+  rc.beginPath(); rc.arc(80, 58, 32, 0, Math.PI*2);
+  rc.fillStyle = '#f5c5a0'; rc.fill();
+  rc.strokeStyle = '#cc9966'; rc.lineWidth = 2; rc.stroke();
 
   // Hair
   rc.fillStyle = '#553300';
-  rc.beginPath();
-  rc.arc(75, 30, 30, Math.PI, Math.PI*2);
-  rc.fill();
+  rc.beginPath(); rc.arc(80, 30, 32, Math.PI, Math.PI*2); rc.fill();
 
-  // Eyes (excited!)
-  rc.fillStyle = '#fff';
-  rc.beginPath(); rc.arc(63, 50, 7, 0, Math.PI*2); rc.fill();
-  rc.beginPath(); rc.arc(87, 50, 7, 0, Math.PI*2); rc.fill();
-  rc.fillStyle = '#1a1a00';
-  rc.beginPath(); rc.arc(64, 51, 4, 0, Math.PI*2); rc.fill();
-  rc.beginPath(); rc.arc(88, 51, 4, 0, Math.PI*2); rc.fill();
-  // Pupils
-  rc.fillStyle = '#fff';
-  rc.beginPath(); rc.arc(65, 50, 1.5, 0, Math.PI*2); rc.fill();
-  rc.beginPath(); rc.arc(89, 50, 1.5, 0, Math.PI*2); rc.fill();
+  // Eyes
+  for (const [ex, ep] of [[66, 66], [94, 90]]) {
+    rc.fillStyle = '#fff'; rc.beginPath(); rc.arc(ex, 53, 8, 0, Math.PI*2); rc.fill();
+    rc.fillStyle = '#1a1a00'; rc.beginPath(); rc.arc(ep > 80 ? 95 : 67, 54, 4.5, 0, Math.PI*2); rc.fill();
+    rc.fillStyle = '#fff'; rc.beginPath(); rc.arc(ep > 80 ? 96 : 68, 53, 1.8, 0, Math.PI*2); rc.fill();
+  }
 
-  // Eyebrows (raised = excited)
-  rc.strokeStyle = '#553300';
-  rc.lineWidth = 2.5;
-  rc.beginPath(); rc.moveTo(57,41); rc.quadraticCurveTo(63,38,70,41); rc.stroke();
-  rc.beginPath(); rc.moveTo(80,41); rc.quadraticCurveTo(87,38,93,41); rc.stroke();
+  // Eyebrows (raised — excited)
+  rc.strokeStyle = '#553300'; rc.lineWidth = 3;
+  rc.beginPath(); rc.moveTo(58,43); rc.quadraticCurveTo(66,39,74,43); rc.stroke();
+  rc.beginPath(); rc.moveTo(86,43); rc.quadraticCurveTo(94,39,102,43); rc.stroke();
 
   // Big smile
-  rc.beginPath();
-  rc.arc(75, 58, 18, 0.1, Math.PI-0.1);
-  rc.strokeStyle = '#cc3300';
-  rc.lineWidth = 3;
-  rc.stroke();
+  rc.beginPath(); rc.arc(80,60,20,0.1,Math.PI-0.1);
+  rc.strokeStyle = '#cc3300'; rc.lineWidth = 3.5; rc.stroke();
+  rc.fillStyle = '#fff'; rc.fillRect(65,67,30,8);
+  rc.strokeStyle = '#ddd'; rc.lineWidth = 1;
+  for (let i = 1; i < 5; i++) rc.strokeRect(65+i*6,67,6,8);
 
-  // Teeth
+  // Neck + lab coat
+  rc.fillStyle = '#f5c5a0'; rc.fillRect(69,87,22,14);
+  rc.fillStyle = '#fff'; rc.fillRect(44,99,72,31); rc.strokeRect(44,99,72,31);
+
+  // Collar
   rc.fillStyle = '#fff';
-  rc.fillRect(62, 64, 26, 7);
-  rc.strokeStyle = '#ddd';
-  rc.lineWidth = 1;
-  for (let i = 1; i < 4; i++) rc.strokeRect(62+i*6.5, 64, 6.5, 7);
+  rc.beginPath(); rc.moveTo(69,101); rc.lineTo(52,113); rc.lineTo(80,109); rc.closePath(); rc.fill();
+  rc.beginPath(); rc.moveTo(91,101); rc.lineTo(108,113); rc.lineTo(80,109); rc.closePath(); rc.fill();
 
-  // Neck & lab coat
-  rc.fillStyle = '#f5c5a0';
-  rc.fillRect(65, 82, 20, 15);
-  rc.fillStyle = '#ffffff';
-  rc.fillRect(40, 94, 70, 30);
-  rc.strokeStyle = '#ddd';
-  rc.lineWidth = 1;
-  rc.strokeRect(40, 94, 70, 30);
+  rc.fillStyle = '#0044aa'; rc.font = 'bold 8px Courier New'; rc.textAlign = 'center';
+  rc.fillText('SANOFI', 80, 118);
 
-  // Lab coat collar
-  rc.fillStyle = '#fff';
-  rc.beginPath();
-  rc.moveTo(65, 96); rc.lineTo(50, 108); rc.lineTo(75, 105);
-  rc.closePath(); rc.fill();
-  rc.beginPath();
-  rc.moveTo(85, 96); rc.lineTo(100, 108); rc.lineTo(75, 105);
-  rc.closePath(); rc.fill();
-  rc.fillStyle = '#0044aa';
-  rc.font = 'bold 7px Courier New';
-  rc.textAlign = 'center';
-  rc.fillText('SANOFI', 75, 112);
-
-  // Arm waving
-  const wave = Math.sin(frameCount * 0.2) * 20;
-  rc.fillStyle = '#fff';
+  // Waving arm
+  const wave = Math.sin(frameCount * 0.22) * 22;
   rc.save();
-  rc.translate(40, 100);
+  rc.translate(44, 104);
   rc.rotate((-0.5 + wave/100) * Math.PI);
-  rc.fillRect(-5, 0, 10, 25);
-  rc.fillStyle = '#f5c5a0';
-  rc.beginPath(); rc.arc(0, 28, 8, 0, Math.PI*2); rc.fill();
+  rc.fillStyle = '#fff'; rc.fillRect(-6, 0, 12, 28);
+  rc.fillStyle = '#f5c5a0'; rc.beginPath(); rc.arc(0,31,9,0,Math.PI*2); rc.fill();
   rc.restore();
 }
 
+// ─── Spawn / Roy helpers ─────────────────────────────────────────────────────
 function spawnVirus() {
   const lane = [-1, 0, 1][Math.floor(Math.random() * 3)];
   const type = VIRUS_TYPES[Math.floor(Math.random() * VIRUS_TYPES.length)];
-  viruses.push({
-    lane,
-    z: 0.02,
-    type,
-    rot: Math.random() * Math.PI * 2,
-    rotSpeed: (Math.random() - 0.5) * 0.05,
-    crushed: false,
-    crushedTimer: 0
-  });
+  viruses.push({ lane, z: 0.01, type, rot: Math.random()*Math.PI*2,
+    rotSpeed: (Math.random()-0.5)*0.05, crushed: false, crushedTimer: 0 });
 }
 
 function showRoy(phrase) {
   royVisible = true;
-  royPhrase = phrase;
-  royTimer = 180;
+  royTimer = 200;
   document.getElementById('royBubble').textContent = phrase;
   document.getElementById('royContainer').classList.add('visible');
 }
-
 function hideRoy() {
   royVisible = false;
   document.getElementById('royContainer').classList.remove('visible');
 }
 
-let keys = {};
+// ─── Input ───────────────────────────────────────────────────────────────────
+const keys = {};
 document.addEventListener('keydown', e => {
   keys[e.key] = true;
   if (gameState === 'menu' && (e.key === ' ' || e.key === 'Enter')) startGame();
 });
-document.addEventListener('keyup', e => keys[e.key] = false);
+document.addEventListener('keyup', e => { keys[e.key] = false; });
 
+// ─── Game lifecycle ───────────────────────────────────────────────────────────
 function startGame() {
   getAudioCtx();
+  stopBGM();
   gameState = 'playing';
-  score = 0;
-  crushed = 0;
-  timer = 30;
-  timerFloat = 30;
-  speed = 0;
-  maxSpeed = 3;
-  carX = W / 2;
-  frameCount = 0;
-  roadOffset = 0;
-  viruses = [];
-  particles = [];
-  finishMode = false;
-  finishProgress = 0;
-  difficulty = 1;
-  royVisible = false;
+  score = 0; crushed = 0;
+  timerFloat = 30; timer = 30;
+  speed = 0; maxSpeed = 3;
+  carX = W / 2; carSteer = 0;
+  frameCount = 0; roadOffset = 0;
+  viruses = []; particles = [];
+  finishMode = false; finishProgress = 0;
+  difficulty = 1; royVisible = false;
   document.getElementById('overlay').style.display = 'none';
   playBGM();
+  lastTime = performance.now();
   requestAnimationFrame(gameLoop);
 }
 
 function endGame(win) {
   gameState = win ? 'win' : 'gameover';
+  stopBGM();
   const overlay = document.getElementById('overlay');
   overlay.style.display = 'flex';
   overlay.innerHTML = win
     ? `<h1>YOU WIN!</h1><h2>VIRUSES CRUSHED!</h2>
        <div id="scoreDisplay">SCORE: ${score}</div>
-       <p style="color:#0f0;font-size:16px">SANOFI SAVES THE DAY!</p>
-       <p style="margin-top:10px">Roy is very proud of you.</p>
+       <p style="color:#0f0;font-size:17px">SANOFI SAVES THE DAY!</p>
+       <p style="margin-top:10px">Roy is VERY proud of you.</p>
        <button id="startBtn" onclick="startGame()">PLAY AGAIN</button>`
     : `<h1>GAME OVER</h1><h2>THE VIRUSES WIN... FOR NOW</h2>
        <div id="scoreDisplay">SCORE: ${score}</div>
@@ -778,60 +778,43 @@ function endGame(win) {
   win ? playWinSound() : playGameOverSound();
 }
 
+// ─── Collision detection ──────────────────────────────────────────────────────
 function checkCollisions() {
-  const carLeft = carX - 55;
-  const carRight = carX + 55;
-  const carBottom = H - 68;
-  const carTop = H - 90;
+  const carHalfW = 62;
 
   viruses.forEach(v => {
     if (v.crushed) return;
-    const roadHalfW = ROAD_W_FAR/2 + (ROAD_W_NEAR/2 - ROAD_W_FAR/2) * v.z;
-    const laneW = roadHalfW / 1.5;
-    const vx = W/2 + v.lane * laneW;
+    // Car occupies roughly z = 0.75–0.98 in screen space
+    if (v.z < 0.72 || v.z > 1.00) return;
+    const vx = getVirusScreenX(v.lane, v.z);
+    if (Math.abs(vx - carX) > carHalfW + v.type.size * 12) return;
+
+    v.crushed = true;
+    v.crushedTimer = 160;
+    crushed++;
+    score += Math.round(v.type.pts * difficulty);
+    timerFloat += 3;
+    timer = Math.ceil(timerFloat);
+
+    showRoy(ROY_PHRASES[Math.floor(Math.random() * ROY_PHRASES.length)]);
+    playCrunchSound();
+
+    // Splat burst particles
     const p = getPerspective(v.z);
-    const vy = p.screenY;
-    const vs = p.scale * v.type.size;
-
-    if (v.z > 0.85 && v.z < 1.05 &&
-        vx + vs > carLeft && vx - vs < carRight &&
-        vy + vs > carTop && vy - vs < carBottom) {
-      v.crushed = true;
-      v.crushedTimer = 60;
-      crushed++;
-      score += v.type.pts * difficulty;
-      timerFloat += 3;
-      timer = Math.ceil(timerFloat);
-
-      const phrase = ROY_PHRASES[Math.floor(Math.random() * ROY_PHRASES.length)];
-      showRoy(phrase);
-
-      playCrunchSound();
-
-      // Splat particles
-      for (let i = 0; i < 15; i++) {
-        particles.push({
-          x: carX,
-          y: H - 80,
-          vx: (Math.random()-0.5)*8,
-          vy: (Math.random()-0.5)*8 - 3,
-          life: 40,
-          maxLife: 40,
-          color: v.type.color
-        });
-      }
-
-      // Check win condition
-      if (crushed >= 100) {
-        finishMode = true;
-        finishProgress = 0;
-      }
+    for (let i = 0; i < 18; i++) {
+      particles.push({
+        x: vx, y: p.screenY,
+        vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10 - 2,
+        life: 50, maxLife: 50, color: v.type.color
+      });
     }
+
+    if (crushed >= 100) { finishMode = true; finishProgress = 0; }
   });
 }
 
+// ─── Main loop ────────────────────────────────────────────────────────────────
 let lastSpawn = 0;
-let bgmStarted = false;
 
 function gameLoop(ts) {
   if (gameState !== 'playing') return;
@@ -839,118 +822,110 @@ function gameLoop(ts) {
   lastTime = ts;
   frameCount++;
 
-  // Update difficulty
   difficulty = 1 + crushed * 0.02;
-  maxSpeed = 3 + difficulty * 0.5;
+  maxSpeed   = 3 + difficulty * 0.4;
+  if (speed < maxSpeed) speed = Math.min(maxSpeed, speed + 0.04);
 
-  // Speed up
-  if (speed < maxSpeed) speed += 0.05;
-
-  // Steering
-  const steerSpeed = 4;
-  if (keys['ArrowLeft'] || keys['a'] || keys['A']) carX = Math.max(W/2 - ROAD_W_NEAR/2 + 60, carX - steerSpeed);
-  if (keys['ArrowRight'] || keys['d'] || keys['D']) carX = Math.min(W/2 + ROAD_W_NEAR/2 - 60, carX + steerSpeed);
+  // Steering with lean
+  const steerSpeed = 5 + speed * 0.4;
+  const left  = keys['ArrowLeft']  || keys['a'] || keys['A'];
+  const right = keys['ArrowRight'] || keys['d'] || keys['D'];
+  if (left)  carX = Math.max(W/2 - ROAD_W_NEAR/2 + 70, carX - steerSpeed);
+  if (right) carX = Math.min(W/2 + ROAD_W_NEAR/2 - 70, carX + steerSpeed);
+  const targetSteer = right ? 1 : left ? -1 : 0;
+  carSteer += (targetSteer - carSteer) * 0.14;
 
   // Road scroll
-  roadOffset = (roadOffset + speed * 0.02) % 1;
+  roadOffset = (roadOffset + speed * 0.016) % 1;
 
-  // Move viruses toward camera
+  // Move viruses; freeze z when crushed so splat stays on road surface
   viruses.forEach(v => {
-    v.z += speed * 0.012;
-    v.rot += v.rotSpeed;
-    if (v.crushed) v.crushedTimer--;
+    if (!v.crushed) {
+      v.z += speed * 0.004;   // slow approach = more reaction time
+      v.rot += v.rotSpeed;
+    } else {
+      v.crushedTimer--;
+    }
   });
-  viruses = viruses.filter(v => !v.crushed || v.crushedTimer > 0);
-  viruses = viruses.filter(v => v.z < 1.15);
+  viruses = viruses.filter(v => v.z < 1.20 && (!v.crushed || v.crushedTimer > 0));
 
-  // Spawn viruses
-  const spawnInterval = Math.max(40, 90 - difficulty * 10);
+  // Spawn
+  const spawnInterval = Math.max(38, 95 - difficulty * 12);
   if (frameCount - lastSpawn > spawnInterval) {
     spawnVirus();
     lastSpawn = frameCount;
   }
 
-  // Finish line
+  checkCollisions();
+
+  // Finish line approach
   if (finishMode) {
-    finishProgress += speed * 0.01;
-    if (finishProgress >= 1) {
-      endGame(true);
-      return;
-    }
+    finishProgress += speed * 0.008;
+    if (finishProgress >= 1) { endGame(true); return; }
   }
 
   // Timer
   timerFloat -= dt;
   timer = Math.max(0, Math.ceil(timerFloat));
-  if (timerFloat <= 0 && !finishMode) {
-    endGame(false);
-    return;
-  }
+  if (timerFloat <= 0 && !finishMode) { endGame(false); return; }
 
-  // Roy timer
-  if (royVisible) {
-    royTimer--;
-    if (royTimer <= 0) hideRoy();
-  }
+  // Roy fade
+  if (royVisible && --royTimer <= 0) hideRoy();
 
-  // Engine sound
   playEngineNote();
 
-  // Draw
+  // ── Draw frame ──
   ctx.clearRect(0, 0, W, H);
   drawSky();
   drawRoad();
 
-  // Sort viruses by z (far to near)
-  const sorted = [...viruses].sort((a, b) => a.z - b.z);
-  sorted.forEach(v => drawVirus(v));
+  // Viruses, far → near
+  [...viruses].sort((a,b) => a.z - b.z).forEach(drawVirus);
 
   drawParticles();
   drawCar();
 
-  // Scan lines effect
-  ctx.fillStyle = 'rgba(0,0,0,0.03)';
+  // CRT scanlines
+  ctx.fillStyle = 'rgba(0,0,0,0.025)';
   for (let y = 0; y < H; y += 3) ctx.fillRect(0, y, W, 1);
 
   // Vignette
-  const vig = ctx.createRadialGradient(W/2, H/2, H*0.3, W/2, H/2, H*0.8);
+  const vig = ctx.createRadialGradient(W/2, H/2, H*0.28, W/2, H/2, H*0.82);
   vig.addColorStop(0, 'rgba(0,0,0,0)');
   vig.addColorStop(1, 'rgba(0,0,0,0.5)');
   ctx.fillStyle = vig;
   ctx.fillRect(0, 0, W, H);
 
-  // Speed lines
-  if (speed > 2) {
-    ctx.strokeStyle = `rgba(255,255,255,${(speed-2)*0.05})`;
+  // Speed streak lines
+  if (speed > 2.5) {
     ctx.lineWidth = 1;
-    for (let i = 0; i < 8; i++) {
-      const lx = W/2 - ROAD_W_NEAR/2 + Math.random()*ROAD_W_NEAR;
+    for (let i = 0; i < 10; i++) {
+      const lx = W/2 - ROAD_W_NEAR/2 + Math.random() * ROAD_W_NEAR;
+      ctx.strokeStyle = `rgba(255,255,255,${(speed-2.5)*0.04})`;
       ctx.beginPath();
-      ctx.moveTo(lx, H-100);
-      ctx.lineTo(lx + (lx-W/2)*0.1, H-140);
+      ctx.moveTo(lx,              H - 80 - Math.random()*60);
+      ctx.lineTo(lx+(lx-W/2)*0.08, H - 160 - Math.random()*40);
       ctx.stroke();
     }
   }
 
-  // Timer warning flash
+  // Low-timer warning flash
   if (timer <= 5 && !finishMode) {
-    ctx.fillStyle = `rgba(255,0,0,${0.15 * Math.sin(frameCount * 0.3)})`;
+    ctx.fillStyle = `rgba(255,0,0,${0.13 * Math.abs(Math.sin(frameCount * 0.25))})`;
     ctx.fillRect(0, 0, W, H);
   }
 
-  // Update HUD
-  document.getElementById('scoreHud').textContent = score;
+  // HUD values
+  document.getElementById('scoreHud').textContent   = score;
   document.getElementById('crushedHud').textContent = crushed;
-  document.getElementById('speedHud').textContent = Math.round(speed * 30);
-  document.getElementById('timerHud').textContent = timer;
+  document.getElementById('speedHud').textContent   = Math.round(speed * 30);
+  document.getElementById('timerHud').textContent   = timer;
 
-  // Draw Roy
   drawRoy();
-
   requestAnimationFrame(gameLoop);
 }
 
-// Initial Roy draw
+// Draw Roy on load
 drawRoy();
 </script>
 </body>

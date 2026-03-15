@@ -177,7 +177,6 @@ const ROAD_BOTTOM = H - 2;
 const ROAD_W_FAR  = Math.round(W * 0.13);
 const ROAD_W_NEAR = Math.round(W * 0.95);
 const CAR_Y       = H - 128;
-const NUM_STRIPS  = 22;
 
 // ─── State ───────────────────────────────────────────────────────────────────
 let gameState = 'menu';
@@ -197,6 +196,8 @@ let shake = 0;
 let flashAlpha = 0;
 let combo = 0, comboTimer = 0;
 const COMBO_WINDOW = 150;
+// OutRun-style road curve sections
+let curveValue = 0, curveTarget = 0, curveSectionLen = 0;
 
 const ROY_PHRASES = [
   "NICE JOB!", "FLATTEN IT!", "SANOFI WINS!", "GET THAT VIRUS!",
@@ -269,10 +270,7 @@ function getPersp(z) {
 function roadHW(z) {
   return ROAD_W_FAR/2 + (ROAD_W_NEAR/2 - ROAD_W_FAR/2)*z;
 }
-function roadCurve() {
-  // Aggressive compound sine — big sweeping curves + sharp kinks
-  return Math.sin(frameCount*0.007)*290 + Math.sin(frameCount*0.004)*140 + Math.sin(frameCount*0.0015)*80;
-}
+function roadCurve() { return curveValue; }
 function roadCX(z) {
   // Road centre x at depth z
   return W/2 + roadCurve()*(1-z);
@@ -328,65 +326,63 @@ function drawSky() {
   ctx.lineTo(W,HORIZON); ctx.closePath(); ctx.fill();
 }
 
-// ─── Road (scanline-style with colour bands + curve) ─────────────────────────
+// ─── Road — single smooth polygon, zero banding, OutRun-style ────────────────
 function drawRoad() {
   const cur = roadCurve();
+  const STEPS = 24; // segments used to trace the curved road shape
+  const ry = t => HORIZON + t*(ROAD_BOTTOM-HORIZON);
+  const cx = t => W/2 + cur*(1-t);
+  const hw = t => roadHW(t);
 
-  // Base grass
-  const gg=ctx.createLinearGradient(0,HORIZON,0,ROAD_BOTTOM);
-  gg.addColorStop(0,'#145514'); gg.addColorStop(1,'#1a7a1a');
+  // 1. Grass — solid gradient, no bands at all
+  const gg = ctx.createLinearGradient(0,HORIZON,0,ROAD_BOTTOM);
+  gg.addColorStop(0,'#0e4a0e'); gg.addColorStop(1,'#1a7a1a');
   ctx.fillStyle=gg; ctx.fillRect(0,HORIZON,W,ROAD_BOTTOM-HORIZON);
 
-  for(let i=NUM_STRIPS-1; i>=0; i--){
-    const t0=i/NUM_STRIPS, t1=(i+1)/NUM_STRIPS;
-    const y0=HORIZON+t0*(ROAD_BOTTOM-HORIZON);
-    const y1=HORIZON+t1*(ROAD_BOTTOM-HORIZON);
-    const cx0=W/2+cur*(1-t0), cx1=W/2+cur*(1-t1);
-    const hw0=roadHW(t0), hw1=roadHW(t1);
-    // Band alternation driven by scroll offset
-    const band=Math.floor((i+roadOffset*NUM_STRIPS)%2<1?0:1);
+  // 2. Road surface — ONE smooth curved polygon, gradient fill, no stripes
+  ctx.beginPath();
+  for(let i=0;i<=STEPS;i++){            // right edge, near→far
+    const t=i/STEPS;
+    i===0 ? ctx.moveTo(cx(t)+hw(t),ry(t)) : ctx.lineTo(cx(t)+hw(t),ry(t));
+  }
+  for(let i=STEPS;i>=0;i--){            // left edge, far→near
+    const t=i/STEPS;
+    ctx.lineTo(cx(t)-hw(t),ry(t));
+  }
+  ctx.closePath();
+  const rg=ctx.createLinearGradient(0,HORIZON,0,ROAD_BOTTOM);
+  rg.addColorStop(0,'#1a1a2c'); rg.addColorStop(1,'#28283e');
+  ctx.fillStyle=rg; ctx.fill();
 
-    // Grass — NO alternation, solid; the perspective trapezoids alone give depth
-    // (grass colour already filled by the base gradient rect above)
-
-    // Road surface — very subtle alternation, low contrast
-    ctx.fillStyle=band===0?'#2e2e48':'#282840';
+  // 3. Curved road-edge white lines (multi-point, follow the curve)
+  ctx.strokeStyle='#ffffff'; ctx.lineWidth=3;
+  for(const side of[-1,1]){
     ctx.beginPath();
-    ctx.moveTo(cx0-hw0,y0); ctx.lineTo(cx0+hw0,y0);
-    ctx.lineTo(cx1+hw1,y1); ctx.lineTo(cx1-hw1,y1);
-    ctx.fill();
-
-    // Rumble strips — SOLID colour, thin, no alternation so they don't flash
-    const rw0=hw0*0.038, rw1=hw1*0.038;
-    ctx.fillStyle='#6a3000';
-    // Left rumble
-    ctx.beginPath();
-    ctx.moveTo(cx0-hw0,y0); ctx.lineTo(cx0-hw0+rw0,y0);
-    ctx.lineTo(cx1-hw1+rw1,y1); ctx.lineTo(cx1-hw1,y1); ctx.fill();
-    // Right rumble
-    ctx.beginPath();
-    ctx.moveTo(cx0+hw0-rw0,y0); ctx.lineTo(cx0+hw0,y0);
-    ctx.lineTo(cx1+hw1,y1); ctx.lineTo(cx1+hw1-rw1,y1); ctx.fill();
-
-    // Lane dividers (white dashes, only on band 0)
-    if(band===0){
-      ctx.fillStyle='#ffffff';
-      const lo0=hw0/1.5, lo1=hw1/1.5;
-      const mw0=Math.max(1,hw0*0.022), mw1=Math.max(1,hw1*0.022);
-      for(const s of[-1,1]){
-        ctx.beginPath();
-        ctx.moveTo(cx0+s*lo0-mw0,y0); ctx.lineTo(cx0+s*lo0+mw0,y0);
-        ctx.lineTo(cx1+s*lo1+mw1,y1); ctx.lineTo(cx1+s*lo1-mw1,y1);
-        ctx.fill();
-      }
+    for(let i=0;i<=STEPS;i++){
+      const t=i/STEPS, x=cx(t)+side*hw(t), y=ry(t);
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
     }
+    ctx.stroke();
   }
 
-  // Edge lines
-  const cxT=W/2+cur, cxB=W/2;
-  ctx.strokeStyle='#ffffff'; ctx.lineWidth=3;
-  ctx.beginPath(); ctx.moveTo(cxT-ROAD_W_FAR/2,HORIZON); ctx.lineTo(cxB-ROAD_W_NEAR/2,ROAD_BOTTOM); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cxT+ROAD_W_FAR/2,HORIZON); ctx.lineTo(cxB+ROAD_W_NEAR/2,ROAD_BOTTOM); ctx.stroke();
+  // 4. Dashed lane dividers — perspective-correct tapered dashes, NOT continuous bands
+  const DASHES = 14;
+  ctx.fillStyle='#cccc00';
+  for(let i=0;i<DASHES;i++){
+    const t0=((i/DASHES)+roadOffset)%1;
+    const t1=(((i+0.38)/DASHES)+roadOffset)%1;
+    if(t0>=t1) continue;                // skip wrap-around fragments
+    const y0=ry(t0), y1=ry(t1);
+    const cx0=cx(t0), cx1=cx(t1);
+    const lo0=hw(t0)/1.5, lo1=hw(t1)/1.5;
+    const mw0=Math.max(1,hw(t0)*0.018), mw1=Math.max(1,hw(t1)*0.018);
+    for(const s of[-1,1]){
+      ctx.beginPath();
+      ctx.moveTo(cx0+s*lo0-mw0,y0); ctx.lineTo(cx0+s*lo0+mw0,y0);
+      ctx.lineTo(cx1+s*lo1+mw1,y1); ctx.lineTo(cx1+s*lo1-mw1,y1);
+      ctx.fill();
+    }
+  }
 
   if(finishMode) drawFinishLine();
 }
@@ -755,6 +751,7 @@ function startGame(){
   finishMode=false; finishProgress=0; difficulty=1;
   royVisible=false; combo=0; comboTimer=0;
   shake=0; flashAlpha=0;
+  curveValue=0; curveTarget=0; curveSectionLen=0;
   document.getElementById('overlay').style.display='none';
   hideRoy();
   startBGM();
@@ -837,8 +834,24 @@ function gameLoop(ts){
 
   // Difficulty
   difficulty=1+crushed*0.022;
-  maxSpeed=3.5+difficulty*0.45;
-  speed=Math.min(maxSpeed, speed+0.045);
+  maxSpeed=2.2+difficulty*0.28;           // slower top speed
+  speed=Math.min(maxSpeed, speed+0.028);  // slower ramp
+
+  // OutRun-style curve sections: straight → bend left → bend right
+  if(--curveSectionLen<=0){
+    const r=Math.random();
+    if(r<0.28){
+      curveTarget=0;                                      // straight
+      curveSectionLen=140+Math.floor(Math.random()*140);
+    } else if(r<0.62){
+      curveTarget=-(Math.random()*0.5+0.5)*420;          // curve left
+      curveSectionLen=110+Math.floor(Math.random()*160);
+    } else {
+      curveTarget= (Math.random()*0.5+0.5)*420;          // curve right
+      curveSectionLen=110+Math.floor(Math.random()*160);
+    }
+  }
+  curveValue+=(curveTarget-curveValue)*0.022;             // smooth ease
 
   // Steering + lean
   const steerSpeed=5+speed*0.5;
@@ -848,7 +861,7 @@ function gameLoop(ts){
   if(rgt) carX=Math.min(W/2+ROAD_W_NEAR/2-72,carX+steerSpeed);
   carSteer+=(( rgt?1:lft?-1:0)-carSteer)*0.13;
 
-  // Road-curve drift — sharper curves push the car; player must counter-steer
+  // Curve drift — car is pushed toward the outside of the bend
   const cur=roadCurve();
   carX+=cur*0.016*speed*0.1;
   carX=Math.max(W/2-ROAD_W_NEAR/2+72, Math.min(W/2+ROAD_W_NEAR/2-72, carX));
@@ -862,9 +875,13 @@ function gameLoop(ts){
   });
   viruses=viruses.filter(v=>v.z<1.22&&(!v.crushed||v.crushedTimer>0));
 
-  // Spawn
-  const interval=Math.max(36,100-difficulty*14);
-  if(frameCount-lastSpawn>interval){ spawnVirus(); lastSpawn=frameCount; }
+  // Spawn — more viruses, occasionally in pairs
+  const interval=Math.max(22,65-difficulty*10);
+  if(frameCount-lastSpawn>interval){
+    spawnVirus();
+    if(Math.random()<0.45) spawnVirus(); // 45% chance of a second virus same moment
+    lastSpawn=frameCount;
+  }
 
   checkCollisions();
 
